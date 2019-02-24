@@ -7,4 +7,4 @@ export prefix := /usr
 	dh $@
 
 override_dh_auto_test:
-	xvfb-run -e /dev/stdout make check
+	xvfb-run -a -e /dev/stdout make check
