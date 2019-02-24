@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+export prefix := /usr
+
+%:
+	dh $@
+
+override_dh_auto_test:
+	xvfb-run make check
