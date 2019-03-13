@@ -33,6 +33,13 @@ The tilde version on the Debian revision is so that an official (if one ever exi
 
 The Debian revision is ZERO rather than ONE because Ubuntu use versions like x.y.z-0ubuntu1 where they haven't forked a Debian package, it remains zero elsewhere for consistency.
 
+In the event a release must be made just for a packaging change (i.e. what is normally a Debian revision bump), an extra version shall be added after the distribution suffix:
+
+    x.y.z-0~debian9
+    x.y.z-0~debian9+1
+    x.y.z-0~debian9+2
+    ...
+
 Alpha/Beta/Release Candidate:
 
     x.y.z~a1-0~debian9
