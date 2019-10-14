@@ -32,8 +32,8 @@
 
 #define PARSE_HEX_STRING_OK(hex, ...) \
 { \
-	unsigned const char expect_tmp[] = { __VA_ARGS__ }; \
-	std::vector<unsigned char> expect_data(expect_tmp, expect_tmp + sizeof(expect_tmp)); \
+	unsigned const char expect_tmp[] = { 0, __VA_ARGS__ }; \
+	std::vector<unsigned char> expect_data(expect_tmp + 1, expect_tmp + sizeof(expect_tmp)); \
 	\
 	EXPECT_NO_THROW({ \
 		std::vector<unsigned char> got_data = REHex::parse_hex_string(hex); \

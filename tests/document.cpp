@@ -653,7 +653,7 @@ TEST(Document, Tests)
 		doc->SetSize(0,0, 640,480);
 		
 		unsigned char buffer_initial[] = {0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07};
-		unsigned char buffer_final[]   = {};
+		// unsigned char buffer_final[] = {};
 		
 		doc->buffer->insert_data(0, buffer_initial, sizeof(buffer_initial));
 		
@@ -664,8 +664,8 @@ TEST(Document, Tests)
 		
 		doc->erase_data(0, 8);
 		
-		is_int(sizeof(buffer_final), doc->buffer->length(), "Document::erase_data() shrinks Buffer")
-			&& is_blob(buffer_final, doc->buffer->read_data(0, 1024).data(), sizeof(buffer_final), "Document::erase_data() erases correct data from Buffer");
+		is_int(/* sizeof(buffer_final) */ 0, doc->buffer->length(), "Document::erase_data() shrinks Buffer")
+			&& is_blob(/* buffer_final */ NULL, doc->buffer->read_data(0, 1024).data(), /* sizeof(buffer_final) */ 0, "Document::erase_data() erases correct data from Buffer");
 		
 		assert(doc->regions.size() == 1);
 		is_int(1, doc->data_regions_count, "Document::data_regions_count");
@@ -1475,7 +1475,7 @@ TEST(Document, Tests)
 		doc->SetSize(0,0, 640,480);
 		
 		unsigned char buffer_initial[] = {0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0x0B,0x0C};
-		unsigned char buffer_final[]   = {};
+		// unsigned char buffer_final[] = {};
 		
 		doc->buffer->insert_data(0, buffer_initial, sizeof(buffer_initial));
 		
@@ -1491,8 +1491,8 @@ TEST(Document, Tests)
 		
 		doc->erase_data(0, 13);
 		
-		is_int(sizeof(buffer_final), doc->buffer->length(), "Document::erase_data() shrinks Buffer")
-			&& is_blob(buffer_final, doc->buffer->read_data(0, 1024).data(), sizeof(buffer_final), "Document::erase_data() erases correct data from Buffer");
+		is_int(/* sizeof(buffer_final) */ 0, doc->buffer->length(), "Document::erase_data() shrinks Buffer")
+			&& is_blob(/* buffer_final */ NULL, doc->buffer->read_data(0, 1024).data(), /* sizeof(buffer_final) */ 0, "Document::erase_data() erases correct data from Buffer");
 		
 		assert(doc->regions.size() == 1);
 		is_int(1, doc->data_regions_count, "Document::data_regions_count");

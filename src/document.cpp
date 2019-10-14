@@ -1291,7 +1291,7 @@ void REHex::Document::OnChar(wxKeyEvent &event)
 			off_t offset_within_cur  = cursor_pos - cur_region->d_offset;
 			off_t offset_within_line = (offset_within_cur % cur_region->bytes_per_line_actual);
 			
-			new_cursor_pos = std::min(
+			new_cursor_pos = std::min<off_t>(
 				(cursor_pos + ((cur_region->bytes_per_line_actual - offset_within_line) - 1)),
 				((cur_region->d_offset + cur_region->d_length) - 1));
 			
@@ -3608,7 +3608,7 @@ off_t REHex::Document::Region::Data::offset_at_xy_hex(REHex::Document &doc, int 
 	 * and the offset (plus one) of the last byte on this line.
 	*/
 	off_t line_data_begin = d_offset + ((off_t)(bytes_per_line_actual) * mouse_y_lines);
-	off_t line_data_end   = std::min((line_data_begin + bytes_per_line_actual), (d_offset + d_length));
+	off_t line_data_end   = std::min<off_t>((line_data_begin + bytes_per_line_actual), (d_offset + d_length));
 	
 	unsigned int char_offset = doc.hf_char_at_x(mouse_x_px);
 	if(((char_offset + 1) % ((doc.bytes_per_group * 2) + 1)) == 0)
@@ -3646,7 +3646,7 @@ off_t REHex::Document::Region::Data::offset_at_xy_ascii(REHex::Document &doc, in
 	 * and the offset (plus one) of the last byte on this line.
 	*/
 	off_t line_data_begin = d_offset + ((off_t)(bytes_per_line_actual) * mouse_y_lines);
-	off_t line_data_end   = std::min((line_data_begin + bytes_per_line_actual), (d_offset + d_length));
+	off_t line_data_end   = std::min<off_t>((line_data_begin + bytes_per_line_actual), (d_offset + d_length));
 	
 	unsigned int char_offset = doc.hf_char_at_x(mouse_x_px);
 	off_t clicked_offset     = line_data_begin + char_offset;
@@ -3668,7 +3668,7 @@ off_t REHex::Document::Region::Data::offset_near_xy_hex(REHex::Document &doc, in
 	 * and the offset (plus one) of the last byte on this line.
 	*/
 	off_t line_data_begin = d_offset + ((off_t)(bytes_per_line_actual) * mouse_y_lines);
-	off_t line_data_end   = std::min((line_data_begin + bytes_per_line_actual), (d_offset + d_length));
+	off_t line_data_end   = std::min<off_t>((line_data_begin + bytes_per_line_actual), (d_offset + d_length));
 	
 	if(mouse_x_px < hex_text_x)
 	{
@@ -3701,7 +3701,7 @@ off_t REHex::Document::Region::Data::offset_near_xy_ascii(REHex::Document &doc, 
 	 * and the offset (plus one) of the last byte on this line.
 	*/
 	off_t line_data_begin = d_offset + ((off_t)(bytes_per_line_actual) * mouse_y_lines);
-	off_t line_data_end   = std::min((line_data_begin + bytes_per_line_actual), (d_offset + d_length));
+	off_t line_data_end   = std::min<off_t>((line_data_begin + bytes_per_line_actual), (d_offset + d_length));
 	
 	if(!doc.show_ascii || mouse_x_px < ascii_text_x)
 	{

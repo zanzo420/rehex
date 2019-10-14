@@ -16,9 +16,13 @@
 */
 
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <io.h>
 #endif
 
+#include <algorithm>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -34,6 +38,10 @@
 
 #ifdef _WIN32
 #define O_NOCTTY 0
+
+#define fseeko _fseeki64
+#define ftello _ftelli64
+#define ftruncate _chsize_s
 #endif
 
 #include "buffer.hpp"
@@ -437,7 +445,7 @@ void REHex::Buffer::write_inplace(const std::string &filename)
 		}
 	}
 	
-	if(ftruncate(fileno(wfh), out_length) == -1)
+	if(ftruncate(fileno(wfh), out_length) != 0)
 	{
 		int err = errno;
 		fclose(wfh);

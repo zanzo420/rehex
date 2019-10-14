@@ -400,7 +400,11 @@ bool REHex::Search::Text::test(const void *data, size_t data_size)
 	}
 	else{
 		return (data_size >= search_for.size()
+			#ifdef _WIN32
+			&& _strnicmp((const char*)(data), search_for.c_str(), search_for.size()) == 0);
+			#else
 			&& strncasecmp((const char*)(data), search_for.c_str(), search_for.size()) == 0);
+			#endif
 	}
 }
 

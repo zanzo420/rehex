@@ -1086,7 +1086,7 @@ void REHex::MainWindow::_update_status_offset(REHex::Document *doc)
 	
 	char buf[64];
 	snprintf(buf, sizeof(buf), "Offset: %08x:%08x",
-		(unsigned int)((off & 0x00000000FFFFFFFF) << 32),
+		(unsigned int)((off & 0x00000000FFFFFFFFLL) << 32),
 		(unsigned int)(off & 0xFFFFFFFF));
 	
 	SetStatusText(buf, 0);
@@ -1105,10 +1105,10 @@ void REHex::MainWindow::_update_status_selection(REHex::Document *doc)
 		
 		char buf[64];
 		snprintf(buf, sizeof(buf), "Selection: %08x:%08x - %08x:%08x (%u bytes)",
-			(unsigned int)((selection_off & 0x00000000FFFFFFFF) << 32),
+			(unsigned int)((selection_off & 0x00000000FFFFFFFFLL) << 32),
 			(unsigned int)(selection_off & 0xFFFFFFFF),
 			
-			(unsigned int)((selection_end & 0x00000000FFFFFFFF) << 32),
+			(unsigned int)((selection_end & 0x00000000FFFFFFFFLL) << 32),
 			(unsigned int)(selection_end & 0xFFFFFFFF),
 			
 			(unsigned int)(selection_length));
@@ -1815,7 +1815,9 @@ void REHex::MainWindow::Tab::init_default_tools()
 			config->SetPath(base_p);
 			
 			std::string name = config->Read("name", "").ToStdString();
-			bool selected    = config->Read("selected", false);
+			
+			bool selected;
+			config->Read("selected", &selected, false);
 			
 			if(ToolPanelRegistry::by_name(name) != NULL)
 			{
