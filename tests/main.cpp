@@ -19,6 +19,8 @@
 #include <wx/app.h>
 #include <wx/init.h>
 
+#include "../src/Palette.hpp"
+
 wxApp &wxGetApp()
 {
        return *wxTheApp;
@@ -28,7 +30,14 @@ int main(int argc, char **argv)
 {
 	wxApp::SetInstance(new wxApp());
 	wxInitializer wxinit;
+
+	REHex::active_palette = REHex::Palette::create_light_palette();
 	
 	testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+	int r = RUN_ALL_TESTS();
+
+	delete REHex::active_palette;
+	REHex::active_palette = NULL;
+
+	return r;
 }
