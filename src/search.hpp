@@ -25,6 +25,7 @@
 #include <thread>
 #include <wx/checkbox.h>
 #include <wx/progdlg.h>
+#include <wx/radiobut.h>
 #include <wx/textctrl.h>
 #include <wx/timer.h>
 
@@ -72,9 +73,6 @@ namespace REHex {
 		protected:
 			Search(wxWindow *parent, REHex::Document &doc, const char *title);
 			
-			virtual bool test(const unsigned char *data, size_t data_size) = 0;
-			virtual size_t test_max_window() = 0;
-			
 			void setup_window();
 			virtual void setup_window_controls(wxWindow *parent, wxSizer *sizer) = 0;
 			virtual bool read_window_controls() = 0;
@@ -84,12 +82,17 @@ namespace REHex {
 			void require_alignment(off_t alignment, off_t relative_to_offset = 0);
 			
 			off_t find_next(off_t from_offset, size_t window_size = DEFAULT_WINDOW_SIZE);
-			void begin_search(off_t from_offset, size_t window_size = DEFAULT_WINDOW_SIZE);
+			void begin_search(off_t from_offset, off_t range_end, size_t window_size = DEFAULT_WINDOW_SIZE);
 			void end_search();
+			
+			virtual bool test(const void *data, size_t data_size) = 0;
+			virtual size_t test_max_window() = 0;
 			
 			void OnCheckBox(wxCommandEvent &event);
 			void OnFindNext(wxCommandEvent &event);
+			void OnCancel(wxCommandEvent &event);
 			void OnTimer(wxTimerEvent &event);
+			void OnClose(wxCloseEvent &event);
 			
 		private:
 			void enable_controls();
@@ -112,10 +115,10 @@ namespace REHex {
 		public:
 			Text(wxWindow *parent, REHex::Document &doc, const std::string &search_for = "", bool case_sensitive = true);
 			
-		protected:
-			virtual bool test(const unsigned char *data, size_t data_size);
+			virtual bool test(const void *data, size_t data_size);
 			virtual size_t test_max_window();
 			
+		protected:
 			virtual void setup_window_controls(wxWindow *parent, wxSizer *sizer);
 			virtual bool read_window_controls();
 	};
@@ -130,10 +133,10 @@ namespace REHex {
 		public:
 			ByteSequence(wxWindow *parent, REHex::Document &doc, const std::vector<unsigned char> &search_for = std::vector<unsigned char>());
 			
-		protected:
-			virtual bool test(const unsigned char *data, size_t data_size);
+			virtual bool test(const void *data, size_t data_size);
 			virtual size_t test_max_window();
 			
+		protected:
 			virtual void setup_window_controls(wxWindow *parent, wxSizer *sizer);
 			virtual bool read_window_controls();
 	};
@@ -144,18 +147,25 @@ namespace REHex {
 			std::list< std::vector<unsigned char> > search_for;
 			
 			NumericTextCtrl *search_for_tc;
-			wxCheckBox *t_u8_cb, *t_s8_cb;
-			wxCheckBox *t_u16be_cb, *t_u16le_cb, *t_s16be_cb, *t_s16le_cb;
-			wxCheckBox *t_u32be_cb, *t_u32le_cb, *t_s32be_cb, *t_s32le_cb;
-			wxCheckBox *t_u64be_cb, *t_u64le_cb, *t_s64be_cb, *t_s64le_cb;
+			wxCheckBox *i8_cb, *i16_cb,*i32_cb, *i64_cb;
+			wxRadioButton *e_little, *e_big, *e_either;
 		
 		public:
 			Value(wxWindow *parent, REHex::Document &doc);
 			
-		protected:
-			virtual bool test(const unsigned char *data, size_t data_size);
+			static const unsigned FMT_LE  = (1 << 0);
+			static const unsigned FMT_BE  = (1 << 1);
+			static const unsigned FMT_I8  = (1 << 2);
+			static const unsigned FMT_I16 = (1 << 3);
+			static const unsigned FMT_I32 = (1 << 4);
+			static const unsigned FMT_I64 = (1 << 5);
+			
+			void configure(const std::string &value, unsigned formats);
+			
+			virtual bool test(const void *data, size_t data_size);
 			virtual size_t test_max_window();
 			
+		protected:
 			virtual void setup_window_controls(wxWindow *parent, wxSizer *sizer);
 			virtual bool read_window_controls();
 			

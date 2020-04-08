@@ -16,10 +16,19 @@
 */
 
 #include <ctype.h>
+#include <inttypes.h>
 #include <string>
 #include <vector>
+#include <wx/clipbrd.h>
+#include <wx/filename.h>
+#include <wx/utils.h>
 
 #include "util.hpp"
+
+/* These MUST come after any wxWidgets headers. */
+#ifdef _WIN32
+#include <shlobj.h>
+#endif
 
 REHex::ParseError::ParseError(const char *what):
 	runtime_error(what) {}
@@ -84,4 +93,88 @@ unsigned char REHex::parse_ascii_nibble(char c)
 		default:
 			throw ParseError("Invalid hex character");
 	}
+}
+
+void REHex::file_manager_show_file(const std::string &filename)
+{
+	wxFileName wxfn(filename);
+	wxfn.MakeAbsolute();
+	
+	#if defined(_WIN32)
+		wxString abs_filename = wxfn.GetFullPath();
+		
+		PIDLIST_ABSOLUTE pidl;
+		SFGAOF flags;
+		
+		if(SHParseDisplayName(abs_filename.wc_str(), NULL, &pidl, 0, &flags) == S_OK)
+		{
+			SHOpenFolderAndSelectItems(pidl, 0, NULL, 0);
+			CoTaskMemFree(pidl);
+		}
+	#elif defined(__APPLE__)
+		wxString abs_filename = wxfn.GetFullPath();
+		
+		const char *argv[] = { "open", "-R", abs_filename.c_str(), NULL };
+		wxExecute((char**)(argv));
+	#else
+		wxString dirname = wxfn.GetPath();
+		
+		const char *argv[] = { "xdg-open", dirname.c_str(), NULL };
+		wxExecute((char**)(argv));
+	#endif
+}
+
+REHex::ClipboardGuard::ClipboardGuard()
+{
+	open = wxTheClipboard->Open();
+}
+
+REHex::ClipboardGuard::~ClipboardGuard()
+{
+	if(open)
+	{
+		wxTheClipboard->Close();
+	}
+}
+
+void REHex::ClipboardGuard::close()
+{
+	if(open)
+	{
+		wxTheClipboard->Close();
+		open = false;
+	}
+}
+
+std::string REHex::format_offset(off_t offset, OffsetBase base, off_t upper_bound)
+{
+	char fmt_out[24];
+	
+	if(upper_bound > 0xFFFFFFFF || offset > 0xFFFFFFFF)
+	{
+		if(base == OFFSET_BASE_HEX)
+		{
+			snprintf(fmt_out, sizeof(fmt_out), "%08X:%08X",
+				(unsigned int)((offset & 0xFFFFFFFF00000000) >> 32),
+				(unsigned int)((offset & 0x00000000FFFFFFFF)));
+		}
+		else if(base == OFFSET_BASE_DEC)
+		{
+			snprintf(fmt_out, sizeof(fmt_out), "%019" PRId64, (int64_t)(offset));
+		}
+	}
+	else{
+		if(base == OFFSET_BASE_HEX)
+		{
+			snprintf(fmt_out, sizeof(fmt_out), "%04X:%04X",
+				(unsigned int)((offset & 0xFFFF0000) >> 16),
+				(unsigned int)((offset & 0x0000FFFF)));
+		}
+		else if(base == OFFSET_BASE_DEC)
+		{
+			snprintf(fmt_out, sizeof(fmt_out), "%010" PRId64, (int64_t)(offset));
+		}
+	}
+	
+	return fmt_out;
 }

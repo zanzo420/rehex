@@ -1,5 +1,5 @@
 /* Reverse Engineer's Hex Editor
- * Copyright (C) 2019 Daniel Collins <solemnwarning@solemnwarning.net>
+ * Copyright (C) 2019-2020 Daniel Collins <solemnwarning@solemnwarning.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published by
@@ -17,8 +17,10 @@
 
 #include <stack>
 #include <utility>
+#include <wx/clipbrd.h>
 
 #include "CommentTree.hpp"
+#include "util.hpp"
 
 static REHex::ToolPanel *CommentTree_factory(wxWindow *parent, REHex::Document *document)
 {
@@ -29,6 +31,7 @@ static REHex::ToolPanelRegistration tpr("CommentTree", "Comments", REHex::ToolPa
 
 enum {
 	ID_EDIT_COMMENT = 1,
+	ID_COPY_COMMENT,
 	ID_GOTO,
 	ID_SELECT,
 };
@@ -112,8 +115,13 @@ void REHex::CommentTree::refresh_comments()
 
 void REHex::CommentTree::OnDocumentDestroy(wxWindowDestroyEvent &event)
 {
-	unbind_events();
-	document = NULL;
+	if(event.GetWindow() == document)
+	{
+		unbind_events();
+		document = NULL;
+	}
+	
+	/* Continue propogation. */
 	event.Skip();
 }
 
@@ -144,6 +152,7 @@ void REHex::CommentTree::OnContextMenu(wxDataViewEvent &event)
 	menu.AppendSeparator();
 	
 	menu.Append(ID_EDIT_COMMENT,  "&Edit comment");
+	menu.Append(ID_COPY_COMMENT,  "&Copy comment(s)");
 	
 	menu.Bind(wxEVT_MENU, [this, key](wxCommandEvent &event)
 	{
@@ -162,6 +171,22 @@ void REHex::CommentTree::OnContextMenu(wxDataViewEvent &event)
 				document->edit_comment_popup(key->offset, key->length);
 				break;
 				
+			case ID_COPY_COMMENT:
+			{
+				ClipboardGuard cg;
+				if(cg)
+				{
+					auto all_comments      = document->get_comments();
+					auto selected_comments = NestedOffsetLengthMap_get_recursive(all_comments, *key);
+					
+					CommentsDataObject *d = new CommentsDataObject(selected_comments, key->offset);
+					
+					wxTheClipboard->SetData(d);
+				}
+				
+				break;
+			}
+			
 			default:
 				break;
 		}
@@ -307,12 +332,12 @@ int REHex::CommentTreeModel::Compare(const wxDataViewItem &item1, const wxDataVi
 		{
 			result = 0;
 		}
-		else if(key1->length > key2->length)
+		else /* if(key1->length > key2->length) */
 		{
 			result = 1;
 		}
 	}
-	else if(key1->offset > key2->offset)
+	else /* if(key1->offset > key2->offset) */
 	{
 		result = 1;
 	}

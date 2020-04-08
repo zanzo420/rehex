@@ -285,7 +285,11 @@ void REHex::Buffer::write_inplace(const std::string &filename)
 	 * the file, creating it if it doesn't exist, WITHOUT truncating and letting
 	 * us write at arbitrary positions.
 	*/
+	#ifdef _WIN32
+	int fd = open(filename.c_str(), (O_RDWR | O_CREAT | O_NOCTTY | _O_BINARY), 0777);
+	#else
 	int fd = open(filename.c_str(), (O_RDWR | O_CREAT | O_NOCTTY), 0777);
+	#endif
 	if(fd == -1)
 	{
 		throw std::runtime_error(std::string("Could not open file: ") + strerror(errno));
@@ -518,6 +522,9 @@ off_t REHex::Buffer::_length()
 
 std::vector<unsigned char> REHex::Buffer::read_data(off_t offset, off_t max_length)
 {
+	assert(offset >= 0);
+	assert(max_length >= 0);
+	
 	std::unique_lock<std::mutex> l(lock);
 	
 	Block *block = _block_by_virt_offset(offset);
@@ -527,6 +534,7 @@ std::vector<unsigned char> REHex::Buffer::read_data(off_t offset, off_t max_leng
 	}
 	
 	std::vector<unsigned char> data;
+	data.reserve(max_length);
 	
 	while(block < blocks.data() + blocks.size() && max_length > 0)
 	{

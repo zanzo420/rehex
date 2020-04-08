@@ -29,8 +29,37 @@ namespace REHex {
 			ParseError(const char *what);
 	};
 	
+	class ClipboardGuard
+	{
+		private:
+			bool open;
+			
+		public:
+			ClipboardGuard();
+			~ClipboardGuard();
+			
+			void close();
+			
+			operator bool() const
+			{
+				return open;
+			}
+	};
+	
 	std::vector<unsigned char> parse_hex_string(const std::string &hex_string);
 	unsigned char parse_ascii_nibble(char c);
+	
+	void file_manager_show_file(const std::string &filename);
+	
+	enum OffsetBase {
+		OFFSET_BASE_HEX = 1,
+		OFFSET_BASE_DEC = 2,
+		
+		OFFSET_BASE_MIN = 1,
+		OFFSET_BASE_MAX = 2,
+	};
+	
+	std::string format_offset(off_t offset, OffsetBase base, off_t upper_bound = -1);
 }
 
 #endif /* !REHEX_UTIL_HPP */

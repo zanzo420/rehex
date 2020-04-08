@@ -1,5 +1,5 @@
 /* Reverse Engineer's Hex Editor
- * Copyright (C) 2017-2019 Daniel Collins <solemnwarning@solemnwarning.net>
+ * Copyright (C) 2017-2020 Daniel Collins <solemnwarning@solemnwarning.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published by
@@ -24,10 +24,12 @@
 #include <memory>
 #include <stdint.h>
 #include <utility>
+#include <wx/dataobj.h>
 #include <wx/wx.h>
 
 #include "buffer.hpp"
 #include "NestedOffsetLengthMap.hpp"
+#include "util.hpp"
 
 namespace REHex {
 	wxDECLARE_EVENT(EV_CURSOR_MOVED,      wxCommandEvent);
@@ -35,6 +37,10 @@ namespace REHex {
 	wxDECLARE_EVENT(EV_SELECTION_CHANGED, wxCommandEvent);
 	wxDECLARE_EVENT(EV_COMMENT_MODIFIED,  wxCommandEvent);
 	wxDECLARE_EVENT(EV_DATA_MODIFIED,     wxCommandEvent);
+	wxDECLARE_EVENT(EV_UNDO_UPDATE,       wxCommandEvent);
+	wxDECLARE_EVENT(EV_BECAME_CLEAN,      wxCommandEvent);
+	wxDECLARE_EVENT(EV_BECAME_DIRTY,      wxCommandEvent);
+	wxDECLARE_EVENT(EV_BASE_CHANGED,      wxCommandEvent);
 	
 	class Document: public wxControl {
 		public:
@@ -53,7 +59,21 @@ namespace REHex {
 				
 				Comment(const wxString &text);
 				
+				bool operator==(const Comment &rhs) const
+				{
+					return *text == *(rhs.text);
+				}
+				
 				wxString menu_preview() const;
+			};
+			
+			enum InlineCommentMode {
+				ICM_HIDDEN       = 0,
+				ICM_FULL         = 1,
+				ICM_SHORT        = 2,
+				ICM_FULL_INDENT  = 3,
+				ICM_SHORT_INDENT = 4,
+				ICM_MAX          = 4,
 			};
 			
 			Document(wxWindow *parent);
@@ -76,8 +96,17 @@ namespace REHex {
 			bool get_show_offsets();
 			void set_show_offsets(bool show_offsets);
 			
+			OffsetBase get_offset_display_base() const;
+			void set_offset_display_base(OffsetBase offset_display_base);
+			
 			bool get_show_ascii();
 			void set_show_ascii(bool show_ascii);
+			
+			InlineCommentMode get_inline_comment_mode();
+			void set_inline_comment_mode(InlineCommentMode mode);
+			
+			bool get_highlight_selection_match();
+			void set_highlight_selection_match(bool highlight_selection_match);
 			
 			off_t get_cursor_position() const;
 			void set_cursor_position(off_t off);
@@ -101,9 +130,14 @@ namespace REHex {
 			
 			void handle_paste(const std::string &clipboard_text);
 			std::string handle_copy(bool cut);
+			size_t copy_upper_limit();
+			
+			void handle_paste(const NestedOffsetLengthMap<Document::Comment> &clipboard_comments);
 			
 			void undo();
+			const char *undo_desc();
 			void redo();
+			const char *redo_desc();
 			
 			void OnPaint(wxPaintEvent &event);
 			void OnSize(wxSizeEvent &event);
@@ -138,6 +172,11 @@ namespace REHex {
 				int64_t y_offset; /* First on-screen line in region */
 				int64_t y_lines;  /* Number of on-screen lines in region */
 				
+				int indent_depth;  /* Indentation depth */
+				int indent_final;  /* Number of inner indentation levels we are the final region in */
+				
+				Region();
+				
 				virtual ~Region();
 				
 				virtual void update_lines(REHex::Document &doc, wxDC &dc) = 0;
@@ -152,6 +191,10 @@ namespace REHex {
 				 * of the DC to improve performance.
 				*/
 				virtual void draw(REHex::Document &doc, wxDC &dc, int x, int64_t y) = 0;
+				
+				virtual wxCursor cursor_for_point(REHex::Document &doc, int x, int64_t y_lines, int y_px);
+				
+				void draw_container(REHex::Document &doc, wxDC &dc, int x, int64_t y);
 				
 				struct Data;
 				struct Comment;
@@ -175,7 +218,9 @@ namespace REHex {
 			
 			Buffer *buffer;
 			std::string filename;
+			
 			bool dirty;
+			void set_dirty(bool dirty);
 			
 			NestedOffsetLengthMap<Comment> comments;
 			NestedOffsetLengthMap<int> highlights;
@@ -205,14 +250,15 @@ namespace REHex {
 			unsigned int bytes_per_line;
 			unsigned int bytes_per_group;
 			
-			/* bytes_per_line, after adjusting for auto option. */
-			unsigned int bytes_per_line_calc;
-			
 			bool offset_column{true};
 			int offset_column_width;
+			OffsetBase offset_display_base;
 			
 			bool show_ascii;
-			int ascii_text_x;
+			
+			InlineCommentMode inline_comment_mode;
+			
+			bool highlight_selection_match;
 			
 			int     scroll_xoff;
 			int64_t scroll_yoff;
@@ -233,12 +279,15 @@ namespace REHex {
 			
 			static const int MOUSE_SELECT_INTERVAL = 100;
 			
-			bool mouse_down_in_hex{false}, mouse_down_in_ascii{false};
+			bool mouse_down_in_hex, mouse_down_in_ascii;
 			off_t mouse_down_at_offset;
+			int mouse_down_at_x;
 			wxTimer mouse_select_timer;
+			off_t mouse_shift_initial;
 			
 			enum CursorState cursor_state;
 			
+			static const int UNDO_MAX = 64;
 			std::list<REHex::Document::TrackedChange> undo_stack;
 			std::list<REHex::Document::TrackedChange> redo_stack;
 			
@@ -283,10 +332,14 @@ namespace REHex {
 			void _update_vscroll_pos();
 			
 			static std::list<wxString> _format_text(const wxString &text, unsigned int cols, unsigned int from_line = 0, unsigned int max_lines = -1);
+			int _indent_width(int depth);
 			
 			void _raise_moved();
 			void _raise_comment_modified();
 			void _raise_data_modified();
+			void _raise_undo_update();
+			void _raise_dirty();
+			void _raise_clean();
 			
 			static const int PRECOMP_HF_STRING_WIDTH_TO = 512;
 			unsigned int hf_string_width_precomp[PRECOMP_HF_STRING_WIDTH_TO];
@@ -304,10 +357,17 @@ namespace REHex {
 		off_t d_offset;
 		off_t d_length;
 		
-		Data(off_t d_offset, off_t d_length);
+		int offset_text_x;  /* Virtual X coord of left edge of offsets. */
+		int hex_text_x;     /* Virtual X coord of left edge of hex data. */
+		int ascii_text_x;   /* Virtual X coord of left edge of ASCII data. */
 		
-		virtual void update_lines(REHex::Document &doc, wxDC &dc);
-		virtual void draw(REHex::Document &doc, wxDC &dc, int x, int64_t y);
+		unsigned int bytes_per_line_actual;  /* Number of bytes being displayed per line. */
+		
+		Data(off_t d_offset, off_t d_length, int i_depth = 0);
+		
+		virtual void update_lines(REHex::Document &doc, wxDC &dc) override;
+		virtual void draw(REHex::Document &doc, wxDC &dc, int x, int64_t y) override;
+		virtual wxCursor cursor_for_point(REHex::Document &doc, int x, int64_t y_lines, int y_px) override;
 		
 		off_t offset_at_xy_hex  (REHex::Document &doc, int mouse_x_px, uint64_t mouse_y_lines);
 		off_t offset_at_xy_ascii(REHex::Document &doc, int mouse_x_px, uint64_t mouse_y_lines);
@@ -321,14 +381,38 @@ namespace REHex {
 		off_t c_offset, c_length;
 		const wxString &c_text;
 		
-		Comment(off_t c_offset, off_t c_length, const wxString &c_text);
+		REHex::Document::Region *final_descendant;
+		
+		Comment(off_t c_offset, off_t c_length, const wxString &c_text, int i_depth);
 		
 		/* Kludge for unit tests which really need to be redesigned... */
 		Comment(off_t c_offset, const wxString &c_text):
-			Comment(c_offset, 0, c_text) {}
+			Comment(c_offset, 0, c_text, 0) {}
 		
-		virtual void update_lines(REHex::Document &doc, wxDC &dc);
-		virtual void draw(REHex::Document &doc, wxDC &dc, int x, int64_t y);
+		virtual void update_lines(REHex::Document &doc, wxDC &dc) override;
+		virtual void draw(REHex::Document &doc, wxDC &dc, int x, int64_t y) override;
+		virtual wxCursor cursor_for_point(REHex::Document &doc, int x, int64_t y_lines, int y_px) override;
+	};
+	
+	class CommentsDataObject: public wxCustomDataObject
+	{
+		private:
+			struct Header
+			{
+				off_t file_offset;
+				off_t file_length;
+				
+				size_t text_length;
+			};
+			
+		public:
+			static const wxDataFormat format;
+			
+			CommentsDataObject();
+			CommentsDataObject(const std::list<NestedOffsetLengthMap<REHex::Document::Comment>::const_iterator> &comments, off_t base = 0);
+			
+			NestedOffsetLengthMap<Document::Comment> get_comments() const;
+			void set_comments(const std::list<NestedOffsetLengthMap<REHex::Document::Comment>::const_iterator> &comments, off_t base = 0);
 	};
 }
 

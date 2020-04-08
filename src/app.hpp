@@ -18,11 +18,10 @@
 #ifndef REHEX_APP_HPP
 #define REHEX_APP_HPP
 
+#include <string>
 #include <wx/config.h>
 #include <wx/filehistory.h>
 #include <wx/wx.h>
-
-#include "Palette.hpp"
 
 namespace REHex {
 	class App: public wxApp
@@ -31,10 +30,14 @@ namespace REHex {
 			wxConfig *config;
 			wxFileHistory *recent_files;
 			
-			REHex::Palette palette;
+			const std::string &get_last_directory();
+			void set_last_directory(const std::string &last_directory);
 			
 			virtual bool OnInit();
 			virtual int OnExit();
+			
+		private:
+			std::string last_directory;
 	};
 }
 

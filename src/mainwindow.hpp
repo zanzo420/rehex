@@ -19,6 +19,8 @@
 #define REHEX_MAINWINDOW_HPP
 
 #include <map>
+#include <set>
+#include <vector>
 #include <wx/aui/auibook.h>
 #include <wx/dnd.h>
 #include <wx/splitter.h>
@@ -45,6 +47,8 @@ namespace REHex {
 			void OnSave(wxCommandEvent &event);
 			void OnSaveAs(wxCommandEvent &event);
 			void OnClose(wxCommandEvent &event);
+			void OnCloseAll(wxCommandEvent &event);
+			void OnCloseOthers(wxCommandEvent &event);
 			void OnExit(wxCommandEvent &event);
 			
 			void OnSearchText(wxCommandEvent &event);
@@ -56,24 +60,37 @@ namespace REHex {
 			void OnPaste(wxCommandEvent &event);
 			void OnUndo(wxCommandEvent &event);
 			void OnRedo(wxCommandEvent &event);
+			void OnSelectAll(wxCommandEvent &event);
+			void OnSelectRange(wxCommandEvent &event);
 			void OnOverwriteMode(wxCommandEvent &event);
 			
 			void OnSetBytesPerLine(wxCommandEvent &event);
 			void OnSetBytesPerGroup(wxCommandEvent &event);
 			void OnShowOffsets(wxCommandEvent &event);
 			void OnShowASCII(wxCommandEvent &event);
+			void OnInlineCommentsMode(wxCommandEvent &event);
+			void OnHighlightSelectionMatch(wxCommandEvent &event);
 			void OnShowToolPanel(wxCommandEvent &event, const REHex::ToolPanelRegistration *tpr);
+			void OnPalette(wxCommandEvent &event);
+			void OnHexOffsets(wxCommandEvent &event);
+			void OnDecOffsets(wxCommandEvent &event);
 			void OnSaveView(wxCommandEvent &event);
 			
+			void OnGithub(wxCommandEvent &event);
+			void OnDonate(wxCommandEvent &event);
 			void OnAbout(wxCommandEvent &event);
 			
 			void OnDocumentChange(wxAuiNotebookEvent &event);
 			void OnDocumentClose(wxAuiNotebookEvent &event);
 			void OnDocumentClosed(wxAuiNotebookEvent &event);
+			void OnDocumentMenu(wxAuiNotebookEvent &event);
 			
 			void OnCursorMove(wxCommandEvent &event);
 			void OnSelectionChange(wxCommandEvent &event);
 			void OnInsertToggle(wxCommandEvent &event);
+			void OnUndoUpdate(wxCommandEvent &event);
+			void OnBecameDirty(wxCommandEvent &event);
+			void OnBecameClean(wxCommandEvent &event);
 			
 		private:
 			class Tab: public wxPanel
@@ -82,6 +99,8 @@ namespace REHex {
 					Tab(wxWindow *parent);
 					Tab(wxWindow *parent, const std::string &filename);
 					
+					virtual ~Tab();
+					
 					REHex::Document    *doc;
 					wxSplitterWindow   *v_splitter;
 					wxSplitterWindow   *h_splitter;
@@ -89,10 +108,13 @@ namespace REHex {
 					wxNotebook         *h_tools;
 					
 					std::map<std::string, ToolPanel*> tools;
+					std::set<wxDialog*> search_dialogs;
 					
 					bool tool_active(const std::string &name);
 					void tool_create(const std::string &name, bool switch_to, wxConfig *config = NULL, bool adjust = true);
 					void tool_destroy(const std::string &name);
+					
+					void search_dialog_register(wxDialog *search_dialog);
 					
 					void save_view(wxConfig *config);
 					
@@ -101,6 +123,7 @@ namespace REHex {
 					void OnVToolChange(wxBookCtrlEvent &event);
 					void OnHSplitterSashPosChanging(wxSplitterEvent &event);
 					void OnVSplitterSashPosChanging(wxSplitterEvent &event);
+					void OnSearchDialogDestroy(wxWindowDestroyEvent &event);
 					
 					void vtools_adjust();
 					void htools_adjust();
@@ -138,19 +161,36 @@ namespace REHex {
 					virtual bool OnDropFiles(wxCoord x, wxCoord y, const wxArrayString &filenames) override;
 			};
 			
+			wxMenu *file_menu;
 			wxMenu *recent_files_menu;
 			wxMenu *edit_menu;
 			wxMenu *view_menu;
+			
 			wxAuiNotebook *notebook;
+			wxBitmap notebook_dirty_bitmap;
 			
 			wxMenu *tool_panels_menu;
 			std::map<std::string, int> tool_panel_name_to_tpm_id;
 			
+			wxMenu *inline_comments_menu;
+			
+			Tab *active_tab();
+			Document *active_document();
+			
 			void _update_status_offset(REHex::Document *doc);
 			void _update_status_selection(REHex::Document *doc);
 			void _update_status_mode(REHex::Document *doc);
+			void _update_undo(REHex::Document *doc);
+			void _update_dirty(REHex::Document *doc);
 			
 			void _clipboard_copy(bool cut);
+			
+			bool unsaved_confirm();
+			bool unsaved_confirm(const std::vector<wxString> &files);
+			
+			void close_tab(Tab *tab);
+			void close_all_tabs();
+			void close_other_tabs(Tab *tab);
 			
 			DECLARE_EVENT_TABLE()
 	};
