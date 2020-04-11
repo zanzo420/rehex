@@ -15,9 +15,6 @@ ifneq ($(GIT_COMMIT_SHA),)
 	export GIT_COMMIT_SHA
 endif
 
-LLVM_CONFIG := llvm-config-7
-export LLVM_CONFIG
-
 %:
 	dh $@
 
