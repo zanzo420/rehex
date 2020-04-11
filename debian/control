@@ -5,7 +5,7 @@ Build-Depends:
  debhelper (>= 9),
  libjansson-dev,
  libwxgtk3.0-dev,
- llvm-7-dev,
+ llvm-dev,
  xauth,
  xvfb,
  wx3.0-headers,
@@ -21,6 +21,5 @@ Depends:
  ${misc:Depends},
  libjansson4,
  libwxgtk3.0-0v5,
- llvm-7-runtime,
  zlib1g
 Description: Reverse Engineers' Hex Editor
