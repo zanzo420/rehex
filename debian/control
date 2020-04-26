@@ -4,7 +4,7 @@ Maintainer: Daniel Collins <solemnwarning@solemnwarning.net>
 Build-Depends:
  debhelper (>= 9),
  libjansson-dev,
- libwxgtk3.0-dev,
+ libwxgtk3.0-gtk3-dev,
  llvm-dev,
  xauth,
  xvfb,
@@ -20,7 +20,7 @@ Depends:
  ${shlibs:Depends},
  ${misc:Depends},
  libjansson4,
- libwxgtk3.0-0v5,
+ libwxgtk3.0-gtk3-0v5,
  llvm-runtime,
  zlib1g
 Description: Reverse Engineers' Hex Editor
