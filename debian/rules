@@ -15,8 +15,13 @@ ifneq ($(GIT_COMMIT_SHA),)
 	export GIT_COMMIT_SHA
 endif
 
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	MAKE_J_FLAG = -j$(NUMJOBS)
+endif
+
 %:
 	dh $@
 
 override_dh_auto_test:
-	xvfb-run -a -e /dev/stdout make check
+	xvfb-run -a -e /dev/stdout make $(MAKE_J_FLAG) check
