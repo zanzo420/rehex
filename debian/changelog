@@ -1,3 +1,37 @@
+rehex (0.2.0-0~ubuntu1910) eoan; urgency=low
+
+  * Allow copying comments from a document and pasting them elsewhere in the
+    same document or into another one.
+
+  * Fixed bounds check when clicking on nested comments in a document.
+
+  * Added context menu when right clicking on a comment in a document.
+
+  * Optionally highlight byte sequences which match the current selection.
+    ("Highlight data matching selection" or "PatternMatchHighlight").
+
+  * Allow copying cursor offset from document context menu.
+
+  * Correctly display offsets over 4GiB in the status bar.
+
+  * Display offsets as XXXX:XXXX rather than XXXXXXXX:XXXXXXXX when the file
+    size is under 4GiB.
+
+  * Add per-document option for dec/hex offset display.
+
+  * When first byte after a comment is deleted, show that the comment was
+    deleted rather than leaving phantom comment on screen until regions are
+    repopulated.
+
+  * Add side-by-side comparison of chunks of data from files. Select data and
+    choose "Compare..." from context menu to open diff window.
+
+  * Clean up search threads when a tab is closed while a search is running.
+
+  * Display bytes which have been modified since the file was saved in red.
+
+ -- Daniel Collins <solemnwarning@solemnwarning.net>  Tue, 02 Jun 2020 18:16:14 +0100
+
 rehex (0.1.0-0~ubuntu1910) UNRELEASED; urgency=low
 
   * Initial release
