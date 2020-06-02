@@ -1,5 +1,5 @@
 /* Reverse Engineer's Hex Editor
- * Copyright (C) 2019 Daniel Collins <solemnwarning@solemnwarning.net>
+ * Copyright (C) 2020 Daniel Collins <solemnwarning@solemnwarning.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published by
@@ -15,25 +15,19 @@
  * Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include <gtest/gtest.h>
-#include <wx/app.h>
-#include <wx/init.h>
+#ifndef REHEX_EDITCOMMENTDIALOG_HPP
+#define REHEX_EDITCOMMENTDIALOG_HPP
 
-#include "../src/ArtProvider.hpp"
+#include <sys/types.h>
+#include <wx/window.h>
 
-wxApp &wxGetApp()
+namespace REHex
 {
-       return *wxTheApp;
+	class EditCommentDialog
+	{
+		public:
+			static void run_modal(wxWindow *parent, Document *doc, off_t offset, off_t length);
+	};
 }
 
-int main(int argc, char **argv)
-{
-	wxApp::SetInstance(new wxApp());
-	wxInitializer wxinit;
-	
-	wxImage::AddHandler(new wxPNGHandler);
-	REHex::ArtProvider::init();
-	
-	testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
-}
+#endif /* !REHEX_EDITCOMMENTDIALOG_HPP */
