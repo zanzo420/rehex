@@ -1,4 +1,4 @@
-Version TBA
+Version 0.2.0 (2020-06-02)
 
  * Allow copying comments from a document and pasting them elsewhere in the
    same document or into another one.
@@ -18,6 +18,17 @@ Version TBA
    size is under 4GiB.
 
  * Add per-document option for dec/hex offset display.
+
+ * When first byte after a comment is deleted, show that the comment was
+   deleted rather than leaving phantom comment on screen until regions are
+   repopulated.
+
+ * Add side-by-side comparison of chunks of data from files. Select data and
+   choose "Compare..." from context menu to open diff window.
+
+ * Clean up search threads when a tab is closed while a search is running.
+
+ * Display bytes which have been modified since the file was saved in red.
 
 Version 0.1.0 (2020-03-12)
 
